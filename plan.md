@@ -1,177 +1,100 @@
-Phase 1: Authentication & Accounts
+# Implementation Plan – Personal Project Directory
 
- Set up Google OAuth
+---
 
-   Configure Supabase for Google authentication
-  
-   Implement account creation with Google (sign-up & login)
-  
-   Store user profile (name, email, Google ID) in Supabase DB
+## Phase 1: Authentication & Profiles
+- [ ] Enable Supabase Auth with Google, GitHub, Twitter OAuth.
+- [ ] Store user profiles (name, email, avatar, bio, links).
+- [ ] Allow profile editing in Settings.
+- [ ] Implement sign-out flow.
 
-   Add logout flow
+---
 
- Extend OAuth providers
+## Phase 2: Project Management
+- [ ] Create DB schema for projects (title, description, tags, media, visibility, version).
+- [ ] Implement CRUD operations.
+- [ ] Add versioning with "last updated" indicator.
+- [ ] Display projects in Notion-style grid.
 
-   Add GitHub OAuth login/signup
-  
-   Add Twitter (X) OAuth login/signup
+---
 
- Profile Editing
+## Phase 3: Directory & Global Search
+- [ ] Build public-facing directory page.
+- [ ] Add **global search bar**:
+  - Visitors → can search for users/projects (public only).
+  - Logged-in users → same plus filters (tags, owner).
+- [ ] Results show user profiles and projects with visibility = public.
 
-   Add profile fields: bio, avatar, personal links (GitHub, LinkedIn, portfolio, etc.)
-  
-   Allow editing during signup and later from a settings page
+---
 
-Phase 2: Project Upload & Directory
+## Phase 4: Social Integrations
+- [ ] LinkedIn OAuth & metrics (likes/comments).
+- [ ] GitHub OAuth & repo metrics (stars/forks/watchers).
+- [ ] Twitter OAuth & tweet metrics (likes/retweets/replies).
+- [ ] Limit: one integration per project.
+- [ ] Background jobs: refresh metrics every 24h.
 
- Project CRUD Features
+---
 
-   Design DB schema for projects (title, description, tags, images, links, owner_id, visibility)
-  
-   Implement “Add New Project” form with validation
-  
-   Upload project images/files (store in Supabase Storage)
-  
-   Display projects in gallery layout (Notion-style cards)
-  
-   Add filtering/search by tags or keywords
-  
-   Allow users to set project visibility (public/private)
+## Phase 5: Monetization
+- [ ] Stripe checkout integration.
+- [ ] Free Plan:
+  - Default template.
+  - Ads displayed.
+- [ ] Premium/Pro Plan:
+  - Ads removed.
+  - Customization unlocked.
+  - AI Design Assistant enabled.
+  - Analytics dashboard available.
+- [ ] **Cancellation Flow**:
+  - Stripe webhook sets plan = free.
+  - Ads re-enabled.
+  - Customization/AI disabled.
+  - Analytics hidden (data preserved).
+  - Send downgrade confirmation email.
 
- Versioning
+---
 
-   Track updates to projects (title/description/content changes)
-  
-   Add “Last updated” indicator on project cards
+## Phase 6: Customization & AI
+- [ ] Build Design Catalog (directory, project, block packs).
+- [ ] Implement customization editor (paid users).
+- [ ] Seed initial templates for out-of-box experience.
+- [ ] Add **real-time AI Design Assistant** (chat-driven).
+- [ ] Allow undo (history cleared on save).
+- [ ] On downgrade: stored layouts preserved but default template shown.
 
-Phase 3: Social Integrations
+---
 
- LinkedIn Integration
+## Phase 7: Analytics
+- [ ] Track:
+  - Profile views
+  - Project impressions
+  - Engagement trends
+- [ ] Build analytics dashboard for Premium/Pro.
+- [ ] Hide dashboard for downgraded users but keep data.
 
-   Connect LinkedIn API (OAuth flow for user)
-  
-   Store single post ID per project (no multiple posts)
-  
-   Fetch likes & comments for linked posts
-  
-   Display engagement metrics on project cards
+---
 
- GitHub Integration
+## Phase 8: Mobile App
+- [ ] Build Expo/React Native client.
+- [ ] Features:
+  - OAuth login.
+  - Project CRUD.
+  - Apply templates (no customization editor).
+  - View metrics.
+- [ ] Simplified navigation vs web.
 
-   Connect GitHub API for repository links (single repo per project)
-  
-   Pull repo stars, forks, watchers count
-  
-   Display GitHub metrics alongside project
+---
 
- Twitter (X) Integration
+## Phase 9: Testing
+- [ ] Unit tests: auth, CRUD, subscriptions, integrations.
+- [ ] e2e tests: sign-in → add project → upgrade → customize → cancel → downgrade.
+- [ ] Edge cases: OAuth fail, API rate limits, AI assistant fallback, payment errors.
 
-   Connect Twitter API (OAuth)
-  
-   Allow linking a single tweet per project
-  
-   Track likes, retweets, and replies
-  
-   Display metrics under project card
+---
 
-Phase 4: Monetization
-
- Ads Integration
-
-   Add Google AdSense banners to free-tier accounts
-  
-   Hide ads completely for premium users
-
- Subscription Model
-
-   Set up Stripe (or Paddle) for payment handling
-  
-   Create subscription tiers (Free, Premium, Pro)
-  
-   Premium features:
-
-    Directory & project page customization
-    
-    AI design assistant access
-    
-    Analytics dashboard
-    
-    Priority project placement
-
- Analytics Dashboard (Premium)
-
-   Profile views tracking
-  
-   Project impressions tracking
-  
-   Engagement trends tracking
-
-Phase 5: Design Catalog & Customization
-
- Design Catalog Setup
-
-   Define JSON-based template DSL for layouts and blocks
-  
-   Seed initial catalog (6 directory templates, 6 project templates, 3 block packs)
-  
-   Create API endpoints for fetching catalog, previews, and applying templates
-
- Customization Editor
-
-   Implement block editor (drag-drop for paid users, limited edits for free users)
-  
-   Allow title/description editing inline
-  
-   Save chosen templates and user edits in Supabase (directory_pages, project_pages)
-  
-   Allow undo while editing, but history is cleared once user clicks “Save Changes”
-
- AI Design Assistant
-
-   Build API endpoint for AI recommendations (/design/recommend)
-  
-   Implement AI-driven template ranking (based on tags, content, preferences)
-  
-   Implement real-time AI chat assistant to help users customize layouts & rewrite text
-  
-   Add guardrails (tone, profanity filter, length limits)
-
-Phase 6: Mobile App
-
- React Native / Expo Setup
-
-   Reuse Supabase backend for mobile clients
-  
-   Replicate login & project CRUD features in mobile app
-  
-   Support template selection (simplified compared to web)
-  
-   View-only engagement metrics
-
- Testing
-
-   Run e2e tests on mobile flows (login, project upload, template selection, view projects)
-
-Phase 7: Infrastructure, Testing & Deployment
-
- Version Control & CI/CD
-
-   Set up GitHub repo with pnpm
-  
-   Use descriptive commits (Conventional Commits)
-  
-   Configure GitHub Actions for CI (tests + linting)
-
- Testing
-
-   Unit tests for DB logic and API functions
-  
-   e2e tests for sign-up → upload project → apply design → view directory flow
-
- Deployment
-
-   Deploy web app to Vercel
-
- Set up monitoring and error tracking in Sentry
-
- Continuous deployment pipeline for mobile (Expo EAS, TestFlight, Play Store)
+## Phase 10: Deployment
+- [ ] Deploy web app on Vercel.
+- [ ] Deploy mobile app via Expo EAS.
+- [ ] Monitor via Sentry.
+- [ ] CI/CD via GitHub Actions (lint, tests, e2e, deploy).
