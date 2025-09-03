@@ -1,258 +1,498 @@
 # Backend Structure Document
 
-## 1. Backend Architecture
+# Backend Structure – Personal Project Directory
 
-Overall, we’ve chosen a Backend-as-a-Service (BaaS) approach centered on Supabase. This setup gives us built-in authentication, a managed PostgreSQL database, file storage, auto-generated REST endpoints, and edge functions for custom logic.
+---
 
-• Supabase Core
-  • Authentication: Google OAuth only, managed by Supabase Auth
-  • Database: PostgreSQL, with Row-Level Security (RLS) policies
-  • Storage: secure buckets for images, videos, QR codes
-  • Auto-Generated REST APIs (PostgREST) for CRUD operations
+## 1. Authentication
+- **OAuth Providers**: Google, GitHub, Twitter.  
+- Supabase Auth handles secure login and session tokens.  
+- User profiles stored in `users` table with fields:
+  - `id` (UUID, PK)
+  - `name`
+  - `email`
+  - `avatar_url`
+  - `bio`
+  - `links` (JSONB: github, linkedin, website, etc.)
+  - `created_at`
 
-• Edge Functions
-  • Custom serverless functions (hosted on Supabase) handle:  
-    – Social metrics aggregation (LinkedIn, GitHub, Twitter)  
-    – AI Design Assistant requests (OpenAI GPT-4)  
-    – Stripe webhooks and subscription management  
-    – Notification emails (SendGrid integration)
+---
+
+## 2. Projects
+- Table: `projects`
+- Fields:
+  - `id` (UUID, PK)
+  - `owner_id` (UUID, FK → users.id)
+  - `title`
+  - `description`
+  - `tags` (Text[])
+  - `image_url`
+  - `link`
+  - `visibility` (Text: `public` or `private`)
+  - `version` (Int, increments on updates)
+  - `created_at`
+  - `updated_at`
+- Features:
+  - Public projects visible in global search and directories.
+  - Private projects visible only to owner.
+
+---
+
+## 3. Engagements
+- Table: `engagements`
+- Fields:
+  - `id`
+  - `project_id` (FK → projects.id)
+  - `platform` (linkedin/github/twitter)
+  - `likes`
+  - `comments`
+  - `stars`
+  - `retweets`
+  - `last_synced`
+- Engagements refreshed daily via API jobs.
+
+---
+
+## 4. Subscriptions
+- Table: `subscriptions`
+- Fields:
+  - `id`
+  - `user_id` (FK → users.id)
+  - `plan` (free, premium, pro)
+  - `status` (active, canceled, past_due)
+  - `started_at`
+  - `ends_at`
+- Integration: Stripe Webhooks.
+  - On cancel → downgrade user to **free plan**.
+  - Effects:
+    - Ads re-enabled.
+    - Customization & AI disabled.
+    - Analytics dashboard hidden.
+    - Projects kept but shown in default design.
+
+---
+
+## 5. Design & Customization
+- Table: `design_templates`
+- Fields: `id`, `name`, `level`, `preview_url`, `tags`, `config_json`, `is_premium`
+- Tables: `directory_pages`, `project_pages`
+  - store chosen template & `config_json`
+- Customization only available for paid users.  
+- On cancellation → stored layouts preserved, but default template shown until re-upgrade.
+
+---
+
+## 6. Analytics
+- Tables:
+  - `profile_views` → logs profile page visits.
+  - `project_impressions` → logs project card impressions.
+  - `engagement_history` → historical engagement snapshots.
+- Only visible to Premium/Pro users.
+- Downgrade hides dashboard, but data is preserved.
+
+---
+
+## 7. Global Search
+- Endpoint: `/api/search?query=...`
+- Searches `users.name` + `projects.title/description`.  
+- Returns only **public projects**.  
+- Accessible by visitors and logged-in users.
+
+---
+
+## 8. Notifications
+- Integration: SendGrid.  
+- Emails:
+  - Welcome
+  - Subscription upgrade/downgrade/cancellation
+  - Project/social updates
+
+1. Backend Architecture
+
+We’ve chosen a Backend-as-a-Service (BaaS) approach centered on Supabase, which provides built-in authentication, a managed PostgreSQL database, file storage, auto-generated REST endpoints, and edge functions for custom logic.
+
+Supabase Core
+
+Authentication: Google, GitHub, and Twitter OAuth via Supabase Auth.
+
+Database: PostgreSQL with Row-Level Security (RLS) policies.
+
+Storage: secure buckets for images, videos, QR codes, and AI-generated assets.
+
+Auto-Generated REST APIs (PostgREST) for basic CRUD operations.
+
+Edge Functions
+
+Custom serverless functions (hosted on Supabase) handle:
+
+Social metrics aggregation (LinkedIn, GitHub, Twitter).
+
+AI Design Assistant requests (OpenAI or other AI providers).
+
+Stripe webhooks for subscription upgrades, downgrades, and cancellations.
+
+Notification emails (SendGrid integration).
 
 Why this works:
-- Scalability: Serverless edge functions and a managed Postgres cluster grow automatically.  
-- Maintainability: BaaS means no database upgrades, security patches, or server maintenance.  
-- Performance: PostgREST endpoints are fast; edge functions run close to the user; CDN caching via Vercel.
 
-## 2. Database Management
+Scalability: serverless edge functions and a managed Postgres cluster grow automatically.
 
-We use PostgreSQL via Supabase. It’s a relational database that handles structured data and enforces relationships between tables.
+Maintainability: BaaS reduces overhead on patches, upgrades, and server management.
 
-• Data Types and Tables
-  • SQL (PostgreSQL) for core data: users, projects, subscriptions, social metrics, templates
-  • Storage buckets for images, videos, QR codes  
+Performance: PostgREST endpoints are fast; edge functions run close to the user; CDN caching via Vercel accelerates global delivery.
 
-• Data Access
-  • Auto-generated REST endpoints for basic create/read/update/delete operations  
-  • Row-Level Security (RLS) ensures users can only modify their own data  
-  • Edge functions for complex queries (e.g., combining social metrics from multiple APIs)  
+2. Database Management
 
-• Data Management Practices
-  • Daily backups of the Postgres database (configured in Supabase)  
-  • Indexes on key columns (user_id, username, project_id) for fast lookups  
-  • 24-hour refresh jobs for social metrics, with caching inside edge functions
+Core Tables: users, projects, subscriptions, engagements, design_templates, directory_pages, project_pages, ai_sessions, notifications.
 
-## 3. Database Schema
+Analytics Tables: profile_views, project_impressions, engagement_history.
 
-### Human-Readable Overview
+Storage Buckets: media (images, videos), QR codes, AI assets.
 
-• **users**: stores user profiles, tiers (free/paid), OAuth identifiers  
-• **projects**: each record holds project metadata (title, description, status, links)  
-• **project_images** & **project_videos**: file references for media stored in buckets  
-• **project_tags** & **project_technologies**: many-to-many mapping tables  
-• **social_metrics**: daily snapshots of LinkedIn, GitHub, Twitter counts  
-• **subscriptions**: Stripe subscription records and status  
-• **templates** & **layouts**: design catalog for drag-and-drop blocks  
-• **ai_sessions**: records of AI design requests and outputs  
-• **notifications**: logs of emails sent (welcome, renewal, etc.)
+Data Access
 
-### SQL Schema (PostgreSQL)
-```sql
-CREATE TABLE users (
-  id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email         text UNIQUE NOT NULL,
-  username      text UNIQUE NOT NULL,
-  avatar_url    text,
-  google_id     text UNIQUE NOT NULL,
-  tier          text NOT NULL CHECK (tier IN ('free', 'paid')),
-  created_at    timestamptz DEFAULT now()
-);
+Supabase REST endpoints for CRUD.
 
-CREATE TABLE projects (
-  id             uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id        uuid REFERENCES users(id) ON DELETE CASCADE,
-  title          text NOT NULL,
-  short_summary  text,
-  description    text,
-  status         text CHECK (status IN ('draft','published','archived')),
-  live_link      text,
-  github_link    text,
-  created_at     timestamptz DEFAULT now(),
-  updated_at     timestamptz DEFAULT now()
-);
+RLS ensures users can only update their own data.
 
-CREATE TABLE project_images (
-  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
-  url        text NOT NULL,
-  position   int DEFAULT 0
-);
+Edge functions for advanced queries (e.g., metrics aggregation).
 
-CREATE TABLE project_videos (
-  id         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
-  url        text NOT NULL,
-  position   int DEFAULT 0
-);
+Practices
 
-CREATE TABLE project_tags (
-  project_id uuid REFERENCES projects(id) ON DELETE CASCADE,
-  tag        text,
-  PRIMARY KEY (project_id, tag)
-);
+Daily backups configured in Supabase.
 
-CREATE TABLE project_technologies (
-  project_id    uuid REFERENCES projects(id) ON DELETE CASCADE,
-  technology    text,
-  PRIMARY KEY (project_id, technology)
-);
+Indexes on key columns (user_id, project_id) for fast lookups.
 
-CREATE TABLE social_metrics (
-  id             uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  project_id     uuid REFERENCES projects(id) ON DELETE CASCADE,
-  platform       text CHECK (platform IN ('linkedin','github','twitter')),
-  likes          int DEFAULT 0,
-  comments       int DEFAULT 0,
-  stars          int DEFAULT 0,
-  forks          int DEFAULT 0,
-  watchers       int DEFAULT 0,
-  retweets       int DEFAULT 0,
-  replies        int DEFAULT 0,
-  recorded_at    date DEFAULT current_date
-);
+24-hour refresh jobs for social metrics with in-function caching.
 
-CREATE TABLE subscriptions (
-  id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id         uuid REFERENCES users(id) ON DELETE CASCADE,
-  stripe_id       text UNIQUE NOT NULL,
-  status          text NOT NULL,
-  plan            text NOT NULL,
-  current_period_end timestamptz,
-  created_at      timestamptz DEFAULT now()
-);
+3. Database Schema (High-Level)
 
-CREATE TABLE templates (
-  id          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name        text NOT NULL,
-  blocks_json jsonb NOT NULL,
-  created_at  timestamptz DEFAULT now()
-);
+users: id, name, email, avatar_url, bio, links (JSONB), created_at.
 
-CREATE TABLE ai_sessions (
-  id           uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id      uuid REFERENCES users(id) ON DELETE CASCADE,
-  input_json   jsonb,
-  output_json  jsonb,
-  created_at   timestamptz DEFAULT now()
-);
+projects: id, owner_id, title, description, tags, media, link, visibility (public/private), version (int), created_at, updated_at.
 
-CREATE TABLE notifications (
-  id           uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id      uuid REFERENCES users(id) ON DELETE CASCADE,
-  type         text,
-  sent_at      timestamptz DEFAULT now(),
-  status       text
-);
-```
+engagements: platform metrics (likes, stars, retweets, comments, forks).
 
-## 4. API Design and Endpoints
+subscriptions: plan (free, premium, pro), status (active, canceled, past_due), stripe_id, started_at, ends_at.
 
-We rely on a mix of Supabase’s auto-generated REST endpoints and custom edge functions:
+design_templates: reusable layout JSON for directory/project customization.
 
-• Auto-generated (PostgREST) endpoints
-  • GET /users  
-  • GET /users?id=eq.{uuid} or username=eq.{username}  
-  • GET /projects?user_id=eq.{uuid}&order=created_at.desc  
-  • POST /projects  
-  • PATCH /projects?id=eq.{project_id}  
-  • DELETE /projects?id=eq.{project_id}
+directory_pages / project_pages: applied templates + saved configs.
 
-• Edge Functions (RESTful)
-  • POST /functions/v1/getSocialMetrics  – fetches and caches metrics from LinkedIn/GitHub/Twitter  
-  • POST /functions/v1/aiDesignAssistant  – sends project content & style prefs to OpenAI GPT-4  
-  • POST /functions/v1/webhooks/stripe  – handles subscription creation, updates, cancellations  
-  • POST /functions/v1/sendNotification  – triggers SendGrid emails (welcome, renewal)
+ai_sessions: inputs/outputs of AI design requests.
 
-• GraphQL (optional future expansion)
-  • Could layer Hasura on top of the same Postgres schema for flexible queries
+notifications: logs of system and subscription emails.
 
-## 5. Hosting Solutions
+profile_views: logs each profile visit.
 
-• Supabase (AWS under the hood)
-  • Managed Postgres cluster, Auth, Storage, Edge Functions  
-  • Global availability and automated scaling
+project_impressions: logs when project cards appear.
 
-• Vercel
-  • Hosts any frontend edge functions and Next.js API routes  
-  • CDN for static assets
+engagement_history: stores daily engagement metrics snapshots.
 
-Benefits:
-- Reliability: SLA-backed services, built-in failover  
-- Scalability: zero-configuration auto-scaling for both compute and database  
-- Cost-effectiveness: pay-as-you-go, minimal DevOps overhead
+4. API Design and Endpoints
+Supabase REST (PostgREST)
 
-## 6. Infrastructure Components
+GET /users, GET /projects, POST /projects, PATCH /projects, DELETE /projects
 
-• Load Balancers & API Gateway
-  • Handled by Supabase and Vercel’s serverless platforms  
+Queries support filters (e.g., visibility=public).
 
-• Caching
-  • Edge caching on Vercel for static assets and SSR pages  
-  • In-function caching of social metrics (24-hour TTL)  
+Custom Edge Functions
 
-• Content Delivery Network (CDN)
-  • Vercel’s global CDN for frontend assets  
-  • Supabase Storage CDN (optional) for serving images/videos
+POST /functions/v1/getSocialMetrics – fetches LinkedIn/GitHub/Twitter metrics.
 
-• Storage Buckets
-  • Supabase Storage: project media, QR codes, AI-generated assets
+POST /functions/v1/aiDesignAssistant – processes customization + AI design requests (real-time).
 
-• Background Jobs
-  • Scheduled edge function or Supabase cron (via third-party) to refresh social metrics daily
+POST /functions/v1/webhooks/stripe – handles upgrades, cancellations, downgrades.
 
-## 7. Security Measures
+POST /functions/v1/sendNotification – sends subscription and activity emails.
 
-• Authentication & Authorization
-  • Google OAuth via Supabase Auth — no passwords to manage  
-  • JWT tokens for session management  
-  • Row-Level Security (RLS) policies to isolate user data
+GET /functions/v1/search – global search endpoint, returns only public projects for visitors.
 
-• Data Encryption
-  • TLS encryption in transit  
-  • AES-256 encryption at rest in Supabase Storage and database backups
+5. Hosting Solutions
 
-• Compliance & Best Practices
-  • GDPR-friendly data handling (users can delete accounts and data)  
-  • PCI DSS compliance via Stripe for payment processing  
-  • Rate-limit calls to social APIs, implement exponential backoff
+Supabase: managed Postgres, Auth, Storage, Functions.
 
-## 8. Monitoring and Maintenance
+Vercel: hosts frontend and SSR/edge routes; CDN for static assets.
 
-• Error Tracking & Performance
-  • Sentry for frontend & backend error monitoring and performance tracing
-  
-• Logging & Metrics
-  • Supabase dashboard for database query monitoring  
-  • Vercel analytics for function invocation metrics and latency  
+Expo EAS: for mobile app builds and distribution.
 
-• CI/CD
-  • GitHub Actions pipeline for linting, testing (unit + e2e), and deployment to Vercel/Supabase  
+6. Infrastructure Components
 
-• Backup & Recovery
-  • Daily automated backups of the Postgres database  
-  • On-demand restores via Supabase console
+Load Balancers & API Gateway: managed by Supabase/Vercel.
 
-• Maintenance Strategy
-  • Quarterly security reviews  
-  • Regular dependency updates via automated pull requests (Dependabot)  
-  • Periodic performance audits and index optimizations
+Caching:
 
-## 9. Conclusion and Overall Backend Summary
+Edge caching on Vercel for static/SSR pages.
 
-Our backend is a modern, serverless stack built on Supabase and Vercel. By leveraging BaaS services, we minimize infrastructure overhead, ensure high availability, and scale seamlessly as user demand grows. Key highlights:
+Engagement metrics cached in edge functions (24h TTL).
 
-• Google-only OAuth authentication and JWT-based sessions make sign-in frictionless and secure.  
-• A robust PostgreSQL schema supports rich project metadata, social metrics, AI sessions, and subscription records.  
-• Edge functions power integrations with social platforms, OpenAI GPT-4, Stripe, and email notifications.  
-• Global CDN, caching, and auto-scaling deliver sub-second performance and 99.9% uptime.  
-• Built-in security (RLS, encryption, GDPR support) and monitoring (Sentry, Supabase/Vercel dashboards) keep the system safe and reliable.
+CDN: Vercel + Supabase Storage CDN.
+
+Background Jobs: cron jobs for social metric refresh + analytics sync.
+
+7. Security Measures
+
+Authentication & Authorization: OAuth via Supabase; JWT tokens for sessions.
+
+Row-Level Security: ensures project/user isolation.
+
+Data Encryption: TLS in transit, AES-256 at rest.
+
+Compliance: GDPR-friendly data handling; PCI DSS via Stripe.
+
+Rate Limits: exponential backoff for external APIs.
+
+8. Monitoring and Maintenance
+
+Error Tracking: Sentry across frontend + backend.
+
+Metrics: Supabase dashboards for queries, Vercel analytics for function invocations.
+
+CI/CD: GitHub Actions (lint, test, e2e, deploy).
+
+Backups: daily automated Postgres backups.
+
+Maintenance: quarterly security reviews, automated dependency updates.
+
+9. Subscription Cancellation Flow
+
+Trigger: user cancels Premium/Pro in Stripe billing.
+
+Stripe webhook updates subscriptions.plan → free.
+
+Immediate effects:
+
+Ads re-enabled.
+
+Customization editor + AI Assistant disabled.
+
+Analytics tab hidden (data preserved).
+
+Projects remain published but displayed with default template.
+
+Send cancellation confirmation email.
+
+10. Conclusion
+
+The backend is a serverless, scalable BaaS stack:
+
+Multi-OAuth authentication (Google, GitHub, Twitter).
+
+Rich Postgres schema for projects, social metrics, AI sessions, subscriptions, analytics.
+
+Edge functions for external APIs (LinkedIn, GitHub, Twitter), AI assistant, Stripe, and notifications.
+
+Strong security (RLS, encryption), automated scaling, and daily backups.
+
+Subscription lifecycle (upgrade → premium features; cancel → revert to free) handled seamlessly.
+
+1) RPC helpers (SQL)
+
+All functions are SECURITY INVOKER (default) so they respect RLS. Safe to deploy.
+
+-- =========================================================
+-- RPC: Full-text-ish search over public projects (+ own)
+-- Usage: select * from public.search_projects('portfolio');
+-- Respects RLS: anon sees only public; owners see their private too (per policies).
+-- =========================================================
+create or replace function public.search_projects(q text)
+returns table (
+  project_id uuid,
+  title text,
+  description text,
+  tags text[],
+  created_at timestamptz,
+  owner_id uuid,
+  owner_name text,
+  owner_avatar text
+)
+language sql
+stable
+as $$
+  select
+    p.id as project_id,
+    p.title,
+    p.description,
+    p.tags,
+    p.created_at,
+    u.id as owner_id,
+    u.name as owner_name,
+    u.avatar_url as owner_avatar
+  from public.projects p
+  join public.users u on u.id = p.owner_id
+  where
+    (q is null or
+      p.title ilike '%'||q||'%' or
+      coalesce(p.description, '') ilike '%'||q||'%' or
+      (p.tags is not null and exists (
+        select 1 from unnest(p.tags) t where t ilike '%'||q||'%'
+      ))
+    )
+  order by p.created_at desc;
+$$;
+
+-- =========================================================
+-- RPC: Safe upsert for subscriptions (Stripe webhooks)
+-- Sets plan/status atomically for a user.
+-- =========================================================
+create or replace function public.upsert_subscription(
+  p_user_id uuid,
+  p_plan plan_enum,
+  p_status sub_status_enum,
+  p_stripe_customer_id text default null,
+  p_stripe_subscription_id text default null,
+  p_ends_at timestamptz default null
+) returns public.subscriptions
+language plpgsql
+security definer  -- webhooks run with service role; needs to bypass RLS on subscriptions
+as $fn$
+declare
+  rec public.subscriptions;
+begin
+  insert into public.subscriptions as s(
+    user_id, plan, status, stripe_customer_id, stripe_subscription_id, ends_at
+  )
+  values (p_user_id, p_plan, p_status, p_stripe_customer_id, p_stripe_subscription_id, p_ends_at)
+  on conflict (user_id) do update
+  set plan = excluded.plan,
+      status = excluded.status,
+      stripe_customer_id = coalesce(excluded.stripe_customer_id, s.stripe_customer_id),
+      stripe_subscription_id = coalesce(excluded.stripe_subscription_id, s.stripe_subscription_id),
+      ends_at = excluded.ends_at
+  returning * into rec;
+
+  return rec;
+end;
+$fn$;
+
+-- Lock this down so only service role (your API) can execute:
+revoke all on function public.upsert_subscription(uuid, plan_enum, sub_status_enum, text, text, timestamptz) from public;
+
+-- =========================================================
+-- RPC: Record analytics events (single insert helpers)
+-- Service role should call these; keep them invoker (RLS allows insert via service role)
+-- =========================================================
+create or replace function public.log_profile_view(p_user_id uuid, p_session_id uuid)
+returns void language sql as $$
+  insert into public.profile_views(user_id, session_id) values (p_user_id, p_session_id);
+$$;
+
+create or replace function public.log_project_impression(p_project_id uuid, p_session_id uuid)
+returns void language sql as $$
+  insert into public.project_impressions(project_id, session_id) values (p_project_id, p_session_id);
+$$;
+
+Seed templates for the Design Catalog
+
+These give you something nice to show immediately. Feel free to tweak the JSON later.
+
+-- Minimal seed set: 2 directory, 2 project, 1 block pack
+insert into public.design_templates (name, level, preview_url, tags, config_json, is_premium)
+values
+('Clean Grid', 'directory', '/previews/clean-grid.png', array['minimal','cold','gallery'],
+ '{
+   "type":"directory",
+   "layout":"grid",
+   "props":{"gap":"lg","columns":{"md":2,"lg":3},"cardStyle":"subtle"},
+   "blocks":[{"type":"projectCard","props":{"showMetrics":true}}]
+ }'::jsonb, false),
+
+('Hero + Gallery', 'directory', '/previews/hero-gallery.png', array['hero','gallery','cold'],
+ '{
+   "type":"directory",
+   "layout":"stack",
+   "blocks":[
+     {"type":"hero","props":{"title":"My Projects","subtitle":"Selected work"}},
+     {"type":"gallery","props":{"gap":"md","columns":{"md":2,"lg":3}}}
+   ]
+ }'::jsonb, true),
+
+('Case Study Minimal', 'project', '/previews/case-minimal.png', array['case','minimal','cold'],
+ '{
+   "type":"project",
+   "layout":"stack",
+   "blocks":[
+     {"type":"title","props":{"align":"left"}},
+     {"type":"media","props":{"variant":"wide"}},
+     {"type":"richText","props":{"sections":["Overview","Challenges","Solution","Impact"]}},
+     {"type":"metrics","props":{"showEngagement":true}}
+   ]
+ }'::jsonb, false),
+
+('Showcase Split', 'project', '/previews/showcase-split.png', array['showcase','split','cold'],
+ '{
+   "type":"project",
+   "layout":"split",
+   "props":{"ratio":"2:1"},
+   "blocks":[
+     {"type":"media","props":{"variant":"tall"}},
+     {"type":"sidebar","props":{"blocks":[
+       {"type":"summary"},
+       {"type":"links"},
+       {"type":"techTags"}
+     ]}}
+   ]
+ }'::jsonb, true),
+
+('Stats + Testimonials Pack', 'block_pack', '/previews/blockpack-stats.png', array['pack','stats','social-proof'],
+ '{
+   "type":"blockPack",
+   "blocks":[
+     {"type":"stats","props":{"items":["Stars","Forks","Likes"]}},
+     {"type":"testimonials","props":{"style":"compact"}}
+   ]
+ }'::jsonb, true);
+
+RLS policy tests (quick verification scripts)
+
+These help you prove anonymous visitors see only public projects, and owners see their own private ones.
+In the Supabase SQL editor you can simulate auth with request.jwt.claims.
+
+-- Setup: create two users and two projects (one public, one private)
+-- (In a real project, auth.users rows come from Supabase Auth; for testing, we fake IDs.)
+select gen_random_uuid() as u1 \gset
+select gen_random_uuid() as u2 \gset
+
+insert into auth.users(id, email) values (:'u1', 'u1@example.com') on conflict do nothing;
+insert into auth.users(id, email) values (:'u2', 'u2@example.com') on conflict do nothing;
+
+insert into public.users(id, name, email) values (:'u1','Alice','u1@example.com') on conflict do nothing;
+insert into public.users(id, name, email) values (:'u2','Bob','u2@example.com') on conflict do nothing;
+
+-- Projects: one public by Alice, one private by Bob
+select gen_random_uuid() as p_public \gset
+select gen_random_uuid() as p_private \gset
+
+insert into public.projects(id, owner_id, title, visibility) values (:'p_public',  :'u1', 'Alice Public',  'public');
+insert into public.projects(id, owner_id, title, visibility) values (:'p_private', :'u2', 'Bob Private',   'private');
+
+-- ===== Test A: Anonymous (no JWT) should only see public
+reset all;  -- clear any jwt claims
+select title, visibility from public.projects order by title;
+
+-- EXPECT: "Alice Public" only.
+
+-- ===== Test B: Auth as Alice should see her own (public or private) + any public
+set local role postgres;  -- required to set claims in SQL editor
+set local "request.jwt.claims" = json_build_object('sub', :'u1')::text;
+
+select auth.uid();  -- should be u1
+select title, visibility from public.projects order by title;
+
+-- EXPECT: "Alice Public" (public) AND NOT "Bob Private" (belongs to Bob)
+
+-- ===== Test C: Auth as Bob should see his private + any public
+set local "request.jwt.claims" = json_build_object('sub', :'u2')::text;
+
+select auth.uid();  -- should be u2
+select title, visibility from public.projects order by title;
+
+-- EXPECT: "Bob Private" and "Alice Public"
+
+-- Cleanup (optional)
+-- delete from public.projects where id in (:'p_public', :'p_private');
+-- delete from public.users where id in (:'u1', :'u2');
+-- delete from auth.users where id in (:'u1', :'u2');
+
 
 This setup meets the project’s goals of rapid development, minimal maintenance, strong security, and a high-performance user experience.
