@@ -173,3 +173,24 @@ Subscription and premium flows functional.
 Positive user feedback on both default simplicity (free) and customization/AI support (paid).
 
 First monetization revenue achieved from premium subscriptions.
+
+✨ Features
+- 🔐 **Google Account Sign-in** – secure login & account creation with Google OAuth.
+- 📂 **Project Directory** – upload projects with images, tags, and links.
+- 🔗 **Social Integrations** – pull likes, comments, stars, and retweets from:
+  - LinkedIn
+  - GitHub
+  - Twitter (X)
+- 📱 **Cross-Platform** – available on both web (Vercel) and mobile (React Native / Expo).
+- 💰 **Monetization** – ads, subscriptions, and premium tiers for advanced analytics & visibility.
+- ✅ **Best Practices** – unit + e2e tests, GitHub Actions CI/CD, error monitoring with Sentry.
+
+---
+
+## 🛠️ Tech Stack
+**Frontend:** Next.js, React, Tailwind CSS v4, shadcn/ui  
+**Backend:** Supabase (Auth, Database, Storage)  
+**Infrastructure:** GitHub, Vercel, Sentry  
+**Mobile:** React Native (Expo)  
+**Payments:** Stripe  
+
