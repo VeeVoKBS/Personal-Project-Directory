@@ -2,6 +2,82 @@
 
 ## 1. Frontend Architecture
 
+# Frontend Guidelines – Personal Project Directory
+
+---
+
+## 1. Frameworks & Tools
+- Next.js + React (Web)
+- Tailwind CSS v4 + shadcn/ui (UI components)
+- React Native + Expo (Mobile)
+- ESLint 9 (linting)
+
+---
+
+## 2. Layout
+- Minimal, clean, functional design.
+- Cold-toned color palette.
+- Notion-inspired project cards grid.
+- Responsive across desktop, tablet, mobile.
+
+---
+
+## 3. Navigation
+- **Header**:
+  - App logo (left).
+  - Global search bar (center).
+  - Profile menu (right).
+- **Sidebar (Web)**:
+  - Projects
+  - Social Integrations
+  - Settings
+  - Upgrade
+  - Analytics (if Premium/Pro)
+- **Mobile**:
+  - Simplified navigation.
+  - No full customization editor, no analytics tab.
+
+---
+
+## 4. Global Search
+- Visible in header (web) and main landing page (visitors).  
+- Visitors: can search users/projects, see only **public projects**.  
+- Logged-in users: same, but results highlight connections to their own profile.  
+
+---
+
+## 5. Project Management
+- Project form: title, description, tags, media, links, visibility (public/private).
+- Card grid auto-updates after save.
+- “Last updated” shown for versioned projects.
+
+---
+
+## 6. Customization & AI
+- Free users: default styling only.
+- Premium/Pro users:
+  - Customization editor above gallery.
+  - Access to Design Catalog templates.
+  - AI Design Assistant (real-time chat modal).
+- Cancelled users → customization toolbar hidden, default layout shown.
+
+---
+
+## 7. Analytics
+- Premium/Pro:
+  - Analytics tab in sidebar.
+  - Charts for profile views, impressions, engagement trends.
+- Downgraded users:
+  - Analytics tab hidden.
+  - Charts/data preserved for potential re-upgrade.
+
+---
+
+## 8. Notifications
+- Inline banners for errors (API, upload, AI).  
+- Toasts for success actions.  
+- Settings → toggle email notifications.
+
 ### 1.1 Overview
 We’re building a web and mobile platform using React-based frameworks. On the web, we use Next.js (latest version) with React, Tailwind CSS v4, and the shadcn/ui component library. For mobile, we leverage React Native via Expo. Supabase handles authentication, database, and storage. Vercel hosts the web app, GitHub manages source control, and Sentry tracks errors.
 
