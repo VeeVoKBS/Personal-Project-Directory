@@ -1,0 +1,46 @@
+# API Rate Limit Handling
+
+## Why Rate Limits?
+External APIs (LinkedIn, GitHub, Twitter, Stripe, AI provider) enforce request limits.  
+To prevent hitting those, we add caching, backoff, and quotas.
+
+---
+
+## External API Limits (approx)
+- **LinkedIn API**: ~100 calls/day/user for engagement
+- **GitHub API**: 5,000 calls/hour/IP (authenticated)
+- **Twitter (X) API v2**: 900 requests/15 min (Standard tier)
+- **Stripe API**: 100 requests/sec (generally safe)
+- **AI Provider**: depends on model/plan (e.g., 60 req/min for GPT-4.1-mini)
+
+---
+
+## Internal Rate Limits
+We define per-user quotas (stored in Supabase).
+
+| Feature               | Free Tier                | Premium Tier         | Pro Tier             |
+|------------------------|--------------------------|----------------------|----------------------|
+| LinkedIn Syncs         | 10/day                   | 100/day              | 500/day              |
+| GitHub Repo Syncs      | 20/day                   | 200/day              | 1,000/day            |
+| Twitter Syncs          | 10/day                   | 100/day              | 500/day              |
+| AI Recommendations     | 5/day                    | 50/day               | 200/day              |
+| AI Customizations      | 5/day                    | 100/day              | 500/day              |
+
+---
+
+## Handling Strategies
+1. **Caching**  
+   - Engagement metrics cached for 24h in Supabase → reduces API calls.  
+   - AI recommendations cached per project for 12h.
+
+2. **Backoff**  
+   - If limit reached, API responds with `429 Too Many Requests`.  
+   - Client retries with exponential backoff.
+
+3. **User Feedback**  
+   - Show progress bar for quota usage in dashboard.  
+   - If exceeded → prompt upgrade suggestion.
+
+4. **Monitoring**  
+   - Sentry logs `rate_limit_exceeded` events.  
+   - Supabase triggers track quota usage per user.
