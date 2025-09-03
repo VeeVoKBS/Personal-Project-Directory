@@ -1,31 +1,46 @@
 flowchart TD
-    Start[Start] --> Auth[Authenticate with Google OAuth]
+    Start[Visitor] --> MainPage[Main Page with Search]
+    MainPage --> SearchPublic[Search Public Users/Projects]
+    MainPage --> Auth[Login via Google/GitHub/Twitter OAuth]
+
     Auth --> AuthCheck{Authenticated}
     AuthCheck -->|Yes| Dashboard[User Dashboard]
-    AuthCheck -->|No| Auth
-    Dashboard --> Directory[View Project Directory]
+    AuthCheck -->|No| MainPage
+
+    Dashboard --> Directory[View/Search Project Directory]
     Dashboard --> Projects[Manage Projects]
     Dashboard --> Settings[User Settings]
-    Directory --> Search[Search Users]
-    Search --> UserProfile[Open User Profile]
-    UserProfile --> ViewProjects[View User Projects]
+    Dashboard --> Subscription{Subscription Tier}
+    Dashboard --> SocialAPI[Integrate Social APIs]
+    Dashboard --> MobileApp[Mobile App]
+    Dashboard --> Notifications[Email Notifications]
+
     Projects --> ProjectForm[Create or Edit Project]
     ProjectForm --> ProjectDetails[Enter Project Details]
-    ProjectDetails --> MediaUpload[Upload Media and Links]
+    ProjectDetails --> Visibility[Set Visibility (Public/Private)]
+    Visibility --> MediaUpload[Upload Media and Links]
     MediaUpload --> SaveDB[Save to Supabase]
-    Dashboard --> Subscription{Subscription Tier}
-    Subscription -->|Free| Ads[Show Ads]
-    Subscription -->|Paid| PaidFeatures[Unlock Paid Features]
+
+    Subscription -->|Free| Ads[Show Ads + Default Design]
+    Subscription -->|Paid| PaidFeatures[Unlock Premium Features]
     PaidFeatures --> Customization[Customization Editor]
     PaidFeatures --> DesignCatalog[Design Catalog]
-    PaidFeatures --> AIAssistant[AI Design Assistant]
-    Dashboard --> SocialAPI[Integrate Social APIs]
+    PaidFeatures --> AIAssistant[AI Design Assistant (Real-Time)]
+    PaidFeatures --> Analytics[Analytics Dashboard]
+
+    Subscription --> Cancel[Cancel Premium/Pro]
+    Cancel --> RevertFree[Revert to Free Plan Features]
+    RevertFree --> Ads
+    RevertFree --> LockCustomization[Customization Locked]
+    RevertFree --> DisableAI[AI Assistant Disabled]
+    RevertFree --> HideAnalytics[Analytics Hidden]
+
     SocialAPI --> FetchMetrics[Fetch Engagement Metrics]
-    FetchMetrics --> DisplayMetrics[Store and Display Metrics]
-    Dashboard --> MobileApp[Mobile App]
-    MobileApp --> MobileAuth[Authenticate via Google OAuth]
-    MobileApp --> QRScan[QR Code Scanning]
+    FetchMetrics --> DisplayMetrics[Store & Display Metrics]
+
+    MobileApp --> MobileAuth[Authenticate OAuth]
+    MobileApp --> QRScan[QR Code Sharing]
     MobileAuth --> Dashboard
     QRScan --> UserProfile
-    Dashboard --> Notifications[Email Notifications]
-    Notifications --> SendGrid[Send Welcome and Updates]
+
+    Notifications --> SendGrid[Emails via SendGrid]
