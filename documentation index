@@ -1,0 +1,50 @@
+## 📚 Documentation Sitemap
+
+```mermaid
+graph TD
+    A[Project Charter] --> B[Requirements]
+    A --> C[Implementation Plan]
+    A --> D[App Flow]
+    A --> E[App Flowchart]
+
+    B --> F[Tech Stack]
+    B --> G[Backend Structure]
+    B --> H[Frontend Guidelines]
+    B --> I[Security Guidelines]
+
+    G --> J[Database Schema]
+    G --> K[SQL DDL]
+    G --> L[API Notes]
+    G --> M[Rate Limits]
+
+    C --> N[Testing Guide]
+    C --> O[CI/CD Pipeline]
+    C --> P[Deployment Guide]
+
+    C --> Q[Analytics Dashboard]
+    C --> R[Monetization]
+
+  
+---
+
+### Clickable Outline
+```markdown
+## 📚 Documentation Sitemap (Clickable)
+
+- [Project Charter](./project_charter.md)  
+  ├── [Requirements](./project_requirements_document.md)  
+  ├── [Implementation Plan](./plan.md)  
+  │   ├── [Testing Guide](./docs/testing.md)  
+  │   ├── [CI/CD Pipeline](./docs/ci-cd.md)  
+  │   └── [Deployment Guide](./docs/deployment.md)  
+  ├── [App Flow](./app_flow_document.md)  
+  ├── [App Flowchart](./app_flowchart.md)  
+  ├── [Tech Stack](./tech_stack_document.md)  
+  ├── [Backend Structure](./backend_structure_document.md)  
+  │   ├── [Database Schema](./docs/schema.md)  
+  │   ├── [SQL DDL](./docs/sql_schema.sql)  
+  │   ├── [API Notes](./docs/api.md)  
+  │   └── [Rate Limits](./docs/rate-limits.md)  
+  ├── [Frontend Guidelines](./frontend_guidelines_document.md)  
+  ├── [Security Guidelines](./security_guideline_document.md)  
+  └── [Analytics Dashboard](./docs/analytics.md)  
