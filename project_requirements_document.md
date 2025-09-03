@@ -8,43 +8,76 @@ We’re building this to solve two core problems: first, the fragmented nature o
 
 ## 2. In-Scope vs. Out-of-Scope
 
-### In-Scope (MVP)
+# Project Requirements – Personal Project Directory
 
-*   Google-only OAuth sign-up and login
+---
 
-*   User dashboard with Notion-inspired project gallery
+## 1. In-Scope
+- **Authentication**: Google, GitHub, Twitter OAuth.  
+- **Profiles**: name, email, avatar, bio, links.  
+- **Main Page Search**:  
+  - Visitors can search for users/projects.  
+  - Only public projects shown.  
+- **Project Management**:  
+  - Create/edit/delete projects.  
+  - Visibility toggle (public/private).  
+  - Versioning (last updated).  
+- **Directory**: searchable gallery with filters.  
+- **Social Integrations**:  
+  - LinkedIn (likes/comments)  
+  - GitHub (stars/forks/watchers)  
+  - Twitter (likes/retweets/replies)  
+  - Limit: one link per project.  
+- **Monetization**:  
+  - Free: ads, default template, limited edits.  
+  - Premium: no ads, customization, AI assistant, analytics.  
+  - Pro: advanced analytics, priority placement.  
+- **Customization**:  
+  - Free → default design.  
+  - Paid → full customization, Design Catalog, AI assistant.  
+- **Analytics (Premium/Pro)**:  
+  - Profile views, project impressions, engagement trends.  
+- **Mobile App**: simplified CRUD, template selection, metrics view.  
+- **Subscription Cancellation**:  
+  - Premium/Pro users can cancel → revert to Free.  
+  - Ads reappear, customization/AI/analytics disabled.  
+  - Projects remain visible with default design.
 
-*   Project CRUD: title, description, tags, cover image, extra images, optional videos, tech used, live links, GitHub repo, status, date created/updated
+---
 
-*   LinkedIn, GitHub, Twitter API integrations (likes, comments, stars, forks, watchers, retweets, replies), refreshed every 24 hours
+## 2. Out-of-Scope
+- Additional social platforms (Behance, Dribbble).  
+- Offline mobile features.  
+- Linking multiple posts/repos/tweets per project.  
 
-*   Custom URL per user: `/username`
+---
 
-*   Global search bar for visitor to find users by name
+## 3. Deliverables
+- MVP web app (Vercel).  
+- Mobile app (Expo).  
+- Supabase backend (auth, projects, analytics).  
+- Social API integrations.  
+- Monetization: ads + subscriptions (Stripe).  
+- Analytics dashboard.  
+- AI design assistant + Design Catalog.  
+- Cancellation handling (downgrade to Free).  
+- Documentation set.
 
-*   Responsive web app (Next.js, Tailwind CSS, shadcn/ui) deployed on Vercel
+---
 
-*   Mobile app (React Native + Expo) mirroring web features, including QR-code profile sharing and scanning
+## 4. Success Criteria
+- Visitors can search users/projects on main page.  
+- Users can log in with Google/GitHub/Twitter.  
+- Profiles editable (bio, avatar, links).  
+- Projects created with visibility + versioning.  
+- Social metrics displayed.  
+- Ads visible for free, hidden for premium.  
+- Paid → customization, AI, analytics.  
+- Cancelled → revert to free, ads return, customization locked.  
+- Analytics track profile views, impressions, trends.  
+- Mobile allows CRUD + template selection.  
+- Monetization milestone achieved.  
 
-*   Free-tier ads via Google AdSense (one sidebar + one every 4–5 project cards); no ads for paid users
-
-*   Stripe-based web subscriptions (monthly/annual) unlocking:
-
-    *   Ad removal
-    *   Drag-and-drop editor for directory & project pages
-    *   Design Catalog of templates & block packs
-    *   AI Design Assistant powered by OpenAI GPT-4
-
-*   Unit and end-to-end tests for core flows; observability via Sentry
-
-### Out-of-Scope (Phase 1)
-
-*   Email/password or other social OAuth providers
-*   Custom domains (e.g., `janesprojects.com`)
-*   Offline mobile support
-*   Direct in-app purchases on iOS/Android
-*   Admin dashboard for moderation or analytics within the app
-*   Integrations with Behance, Dribbble or other platforms
 
 ## 3. User Flow
 
