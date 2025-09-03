@@ -1,0 +1,85 @@
+
+---
+
+# 📄 `/docs/analytics.md`
+```markdown
+# Analytics Dashboard (Premium Users)
+
+Premium and Pro subscribers access analytics to measure portfolio reach.
+
+---
+
+## Metrics Tracked
+1. **Profile Views** – how many visitors viewed a user’s profile page.  
+2. **Project Impressions** – how many times a project card appeared in directories/search.  
+3. **Engagement Trends** – growth of likes, stars, retweets, comments over time.
+
+---
+
+## Data Collection
+- **Profile Views**  
+  - Logged on profile page load (unique session ID).  
+  - Stored in Supabase `profile_views` table.
+
+- **Project Impressions**  
+  - Logged when a project card enters viewport (IntersectionObserver).  
+  - Stored in Supabase `project_impressions` table.
+
+- **Engagement Trends**  
+  - Fetched daily via LinkedIn, GitHub, Twitter APIs.  
+  - Stored in Supabase `engagement_history`.
+
+---
+
+## Database Tables
+
+### profile_views
+| Column     | Type       | Notes                         |
+|------------|------------|-------------------------------|
+| id         | UUID (PK)  |                               |
+| user_id    | UUID (FK)  | -> users.id                   |
+| session_id | UUID       | Unique per visitor            |
+| created_at | Timestamp  |                               |
+
+### project_impressions
+| Column     | Type       | Notes                         |
+|------------|------------|-------------------------------|
+| id         | UUID (PK)  |                               |
+| project_id | UUID (FK)  | -> projects.id                |
+| session_id | UUID       | Unique per visitor            |
+| created_at | Timestamp  |                               |
+
+### engagement_history
+| Column     | Type       | Notes                         |
+|------------|------------|-------------------------------|
+| id         | UUID (PK)  |                               |
+| project_id | UUID (FK)  | -> projects.id                |
+| platform   | Text       | linkedin \| github \| twitter |
+| metric     | Text       | likes, stars, retweets, etc.  |
+| value      | Int        | Value at time of sync         |
+| created_at | Timestamp  |                               |
+
+---
+
+## Dashboard Features
+- **Overview Page**  
+  - Profile Views (7d, 30d)  
+  - Project Impressions (7d, 30d)  
+  - Engagement Growth (line chart)
+
+- **Per-Project Detail**  
+  - Project-specific impressions  
+  - Engagement breakdown by platform  
+
+- **Pro Features**  
+  - Export data as CSV  
+  - Advanced filtering (tags, time range)  
+  - Compare projects side by side  
+
+---
+
+## Visualization
+- Use Recharts in web app.  
+- Use Victory Native (React Native) for mobile app.
+
+---
